@@ -1,0 +1,37 @@
+workflows:
+
+  build debug and testapi:
+    name: On demand build android apks and run tests. Uses the "Master" collection in Firebase Test Lab.
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      flutter: 3.32.5
+      java: 17
+      xcode: 16.0
+      cocoapods: default
+      android_signing:
+        - upload-keystore
+      vars:
+        ## needed to fix the "java.lang.OutOfMemoryError: Java heap space" error
+        JAVA_TOOL_OPTIONS: "-Xmx5g"
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Build APK with Flutter config only
+        script: |
+          flutter build apk --config-only
+      - name: Build test and debugapk
+        script: |
+          cd "$CM_BUILD_DIR/android"
+          chmod +x gradlew
+          ./gradlew app:assembleAndroidTest
+          ./gradlew app:assembleDebug -Ptarget="$CM_BUILD_DIR/integration_test/main.dart"
+    artifacts:
+      - build/**/outputs/**/*.apk
