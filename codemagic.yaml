@@ -9,8 +9,6 @@ workflows:
       java: 17
       xcode: 16.0
       cocoapods: default
-      android_signing:
-        - upload-keystore
       vars:
         ## needed to fix the "java.lang.OutOfMemoryError: Java heap space" error
         JAVA_TOOL_OPTIONS: "-Xmx5g"
